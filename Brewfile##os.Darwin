@@ -1,0 +1,66 @@
+tap "homebrew/bundle"
+tap "homebrew/cask"
+tap "homebrew/cask-drivers"
+tap "homebrew/cask-fonts"
+tap "homebrew/cask-versions"
+
+# Mac App Store
+brew "mas"
+
+# Shell
+brew "bash-completion"
+brew "cmake"
+brew "coreutils"
+brew "curl"
+brew "git"
+brew "git-gui"
+brew "git-secret"
+brew "gnu-sed"
+brew "gnupg"
+brew "ssh-copy-id"
+brew "zsh"
+brew "zsh-completions"
+brew "zsh-syntax-highlighting"
+brew "zsh-autosuggestions"
+
+# Editors
+cask "textmate"
+cask "visual-studio-code"
+
+# System Essentials
+cask "docker"
+cask "iterm2"
+
+# Desktop Apps
+cask "balenaetcher"
+cask "google-chrome"
+cask "handbrake"
+cask "obsidian"
+
+# Dev Tools
+brew "git-lfs"
+brew "go"
+brew "jq"
+brew "python3"
+brew "yq"
+
+# Infra Tools
+brew "awscli"
+brew "helm"
+brew "ipcalc"
+brew "kubernetes-cli"
+brew "kustomize"
+
+# Media
+brew "ffmpeg"
+brew "flac"
+cask "mpv"
+cask "vlc"
+
+# AppStore Applications
+# Slack
+mas install 803453959
+# Todoist
+mas install 585829637
+# Tailscale
+mas install 1475387142

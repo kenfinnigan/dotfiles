@@ -1,0 +1,86 @@
+#!/bin/bash
+cd "$HOME"
+
+system_type=$(uname -s)
+
+# Bootstrap MacOS
+if [ "$system_type" = "Darwin" ]; then
+
+  # Install XCode Command Line Tools (CLT)
+  echo "XCode Command Line Tools (CLT)"
+  xcode-select --install &> /dev/null
+  
+  # Ensure your MacOS is up to date
+  echo "Updating MacOS"
+  softwareupdate --all --install --force
+
+  # Disable the UI sound
+  defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -int 0
+  sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
+  sudo launchctl load /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
+
+  # Enable Dock autohide
+  defaults write com.apple.dock autohide -bool true
+  # No app icons in the Dock
+  defaults delete com.apple.dock persistent-apps
+  defaults delete com.apple.dock persistent-others
+  killall Dock
+
+  # Disable Ctrl+Arrow mapping for Mission Control as it's more useful for jumping words in a terminal
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 79 "{enabled = 0; value = { parameters = (65535, 123, 8650752); type = standard;};}"
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 80 "{enabled = 0; value = { parameters = (65535, 123, 8781824); type = standard;};}"
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 81 "{enabled = 0; value = { parameters = (65535, 124, 8650752); type = standard;};}"
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 82 "{enabled = 0; value = { parameters = (65535, 124, 8781824); type = standard;};}"
+
+  # Configure Scroll Reverser
+  defaults write com.pilotmoon.scroll-reverser InvertScrollingOn -int 1
+  defaults write com.pilotmoon.scroll-reverser ReverseMouse -int 0
+  defaults write com.pilotmoon.scroll-reverser ReverseX -int 1
+  defaults write com.pilotmoon.scroll-reverser StartAtLogin -int 1
+
+  # Install homebrew if it's missing
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "Installing homebrew"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+
+  # Install/update brew bundle
+  if [ -f "$HOME/.Brewfile" ]; then
+    echo "Updating homebrew bundle"
+    brew update
+    brew doctor
+    brew upgrade  # Ensure all packages are upgraded
+    brew cleanup --prune=14
+    brew bundle --file="$HOME/.Brewfile"
+  fi
+  
+  # Enable and use the brew-managed ZSH
+  if ! grep -Fxq "$(brew --prefix)/bin/zsh" /etc/shells; then
+    sudo cp /etc/shells /etc/shells.default
+    echo "$(brew --prefix)/bin/zsh" | sudo tee -a /etc/shells
+  fi
+
+  if [ "$SHELL" != "$(brew --prefix)/bin/zsh" ]; then
+    chsh -s $(brew --prefix)/bin/zsh
+  fi
+
+  # Setup iTerm2
+  if [ -d "$HOME/.config/iterm2" ]; then
+    echo "Setting iTerm preference folder"
+    defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$HOME/.config/iterm2"
+    defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
+    defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile -bool true
+    defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile_selection -bool true
+  fi
+
+  # Set default applications for known extensions.
+  # Application names can be found using the mdls command, e.g.
+  # mdls -name kMDItemCFBundleIdentifier -r  /Applications/Visual\ Studio\ Code.app
+  duti -s com.microsoft.VSCode yaml all
+  duti -s com.microsoft.VSCode yml all
+  duti -s com.microsoft.VSCode json all
+
+  # Ensure proper permissions for ZSH shared directories
+  # Use `compaudit` to verify
+  chmod -R go-w "$(brew --prefix)/share"
+fi
