@@ -14,30 +14,6 @@ if [ "$system_type" = "Darwin" ]; then
   echo "Updating MacOS"
   softwareupdate --all --install --force
 
-  # Disable the UI sound
-  defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -int 0
-  sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
-  sudo launchctl load /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
-
-  # Enable Dock autohide
-  defaults write com.apple.dock autohide -bool true
-  # No app icons in the Dock
-  defaults delete com.apple.dock persistent-apps
-  defaults delete com.apple.dock persistent-others
-  killall Dock
-
-  # Disable Ctrl+Arrow mapping for Mission Control as it's more useful for jumping words in a terminal
-  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 79 "{enabled = 0; value = { parameters = (65535, 123, 8650752); type = standard;};}"
-  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 80 "{enabled = 0; value = { parameters = (65535, 123, 8781824); type = standard;};}"
-  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 81 "{enabled = 0; value = { parameters = (65535, 124, 8650752); type = standard;};}"
-  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 82 "{enabled = 0; value = { parameters = (65535, 124, 8781824); type = standard;};}"
-
-  # Configure Scroll Reverser
-  defaults write com.pilotmoon.scroll-reverser InvertScrollingOn -int 1
-  defaults write com.pilotmoon.scroll-reverser ReverseMouse -int 0
-  defaults write com.pilotmoon.scroll-reverser ReverseX -int 1
-  defaults write com.pilotmoon.scroll-reverser StartAtLogin -int 1
-
   # Install homebrew if it's missing
   if ! command -v brew >/dev/null 2>&1; then
     echo "Installing homebrew"
@@ -83,4 +59,38 @@ if [ "$system_type" = "Darwin" ]; then
   # Ensure proper permissions for ZSH shared directories
   # Use `compaudit` to verify
   chmod -R go-w "$(brew --prefix)/share"
+fi
+
+# ZSH Configuration
+mkdir -p "$HOME/.zinit"
+if [ ! -d "$HOME/.zinit/bin" ]; then
+  echo "Bootstrap zinit"
+  git clone https://github.com/zdharma-continuum/zinit.git "$HOME/.zinit/bin"
+fi
+
+# ZSH Upgrades
+echo "Upgrade zinit"
+zsh -c '. $HOME/.zshrc && zinit self-update'
+echo "Upgrade zsh plugins"
+zsh -c '. $HOME/.zshrc && zinit update --parallel'
+
+# Create SSH configuration directory
+mkdir -p  "$HOME/.ssh" "$HOME/.ssh/config.d" "$HOME/.ssh/sockets"
+chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d" "$HOME/.ssh/sockets"
+
+# Bootstrap Go
+if command -v go >/dev/null 2>&1; then
+  echo "Bootstrapping Go"
+  if [ ! -d "$HOME/go" ]; then
+    mkdir $HOME/go
+    mkdir -p $HOME/go/bin $HOME/go/pkg $HOME/go/src
+  fi
+fi
+
+# Install Visual Studio Code Plugins
+if [ -f "$HOME/.vscode-extensions" ]; then
+  if command -v code >/dev/null 2>&1; then
+    echo "Installing visual studio code plugins"
+    cat "$HOME/.vscode-extensions" | xargs -n 1 code --force --install-extension
+  fi
 fi
