@@ -51,6 +51,10 @@ brew "ipcalc"
 brew "kubernetes-cli"
 brew "kustomize"
 
+# Fonts
+cask "font-inconsolata-nerd-font"
+cask "font-inconsolata-go-nerd-font"
+
 # Media
 brew "ffmpeg"
 brew "flac"
